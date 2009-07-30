@@ -1,0 +1,76 @@
+{% extends "testmonkey/base.html" %}
+
+{% block extrahead %}
+<script type="text/javascript">
+$(function() {
+
+  // Toggle showing the tests.
+  $("div#content-main th").click(function() {
+    var $this = $(this);
+    if ($this.hasClass("closed")) {
+      $(this).parent().nextAll().show();
+    } else {
+      $(this).parent().nextAll().hide();
+    }
+    $this.toggleClass("closed");
+  });
+  
+  // Clicking run hits the tests.
+  $run = $("div#content-main td.run");
+  $run.click(function() {
+    // @@@ Don't run other tests until this one is done.
+    //$run.removeClass("run");  
+    var $this = $(this),  
+        appLabel = $this.parents("tbody").prev().children().html();
+    $.post(appLabel + "/", function(data) {
+       $this.parents("tbody").append("<div>"+data+"</div>");
+    });
+
+  
+  });
+
+  
+
+
+});
+
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+<body class="dashboard">
+
+  <div id="header"></div>
+  <div id="container">
+    <div id="content" class="colMS">
+      <h1>Test Monkey</h1>
+      <div id="content-main">
+        {% for app_test in app_tests %}<div class="module">
+          <table summary="">
+            <caption><a href="">{{ app_test }}</a></caption>
+            <tbody>
+              <tr>
+                <th class="closed">{{ app_test.get_tests|length }} test{{ app_test.get_tests|pluralize }}</th>
+                <td class="run">RUN</td>
+              </tr>
+              {% for test in app_test %}<tr style="display:none;">
+                <td colspan="2">{{ test }}</td>
+              </tr>
+              {% if test.doc %}<tr style="display:none;">
+                <td colspan="2">{{ test.doc }}</td>
+              {% endif %}{% endfor %}</tr>
+            </tbody>
+          </table>
+        </div><!-- /.module -->{% endfor %}
+      </div><!-- #content-main -->
+    </div><!-- #content -->
+  <div><!-- #container -->
+  
+
+  
+</body>
+
+
+{% endblock %}
