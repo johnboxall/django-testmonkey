@@ -2,7 +2,18 @@
 
 {% block extrahead %}
 <script type="text/javascript">
+
+var D;
+
 $(function() {
+
+  function passed($el) {
+    $el.css("background", "green");
+  }
+  
+  function failed($el) {
+    $el.css("background", "red");
+  }
 
   // Toggle showing the tests.
   $("div#content-main th").click(function() {
@@ -15,26 +26,38 @@ $(function() {
     $this.toggleClass("closed");
   });
   
-  // Clicking run hits the tests.
-  $run = $("div#content-main td.run");
-  $run.click(function() {
+    // Clicking run hits the tests.
+    $run = $("div#content-main td.run");
+    $run.click(function() {
     // @@@ Don't run other tests until this one is done.
     //$run.removeClass("run");  
-    var $this = $(this),  
-        appLabel = $this.parents("tbody").prev().children().html();
-    $.post(appLabel + "/", function(data) {
-       $this.parents("tbody").append("<div>"+data+"</div>");
-    });
+    
+        var $self = $(this),
+            testLabel = this.id;
 
+        $.post(testLabel + "/", "", function(failures) {
+            // Anything that didn't fail passed...
+            failures = eval(failures); // @@@ should b json
+      
+            if (!failures.length) {
+                passed($self);
+
+            // Mark each failed test.
+            } else {
+                for (var i=0; i<failures.length; i++) {
+                    // Watch out for "." in ids.
+                    failed($(document.getElementById(failures[i][0])));
+                }
+            }
+
+
+        D = eval(failures);
+
+
+        }, "json");
   
   });
-
-  
-
-
 });
-
-
 </script>
 {% endblock %}
 
@@ -52,15 +75,16 @@ $(function() {
             <caption><a href="">{{ app_test }}</a></caption>
             <tbody>
               <tr>
-                <th class="closed">{{ app_test.get_tests|length }} test{{ app_test.get_tests|pluralize }}</th>
-                <td class="run">RUN</td>
+                <th class="">{{ app_test.get_tests|length }} test{{ app_test.get_tests|pluralize }}</th>
+                <td class="run" id="{{ app_test.label }}">RUN</td>
               </tr>
-              {% for test in app_test %}<tr style="display:none;">
-                <td colspan="2">{{ test }}</td>
+              {% for test in app_test %}<tr style="">
+                <td>{{ test }}</td>
+                <td id="{{ test.label }}" class="run">RUN</td>
               </tr>
-              {% if test.doc %}<tr style="display:none;">
+              <!--{% if test.doc %}<tr style="">
                 <td colspan="2">{{ test.doc }}</td>
-              {% endif %}{% endfor %}</tr>
+              {% endif %}-->{% endfor %}</tr>
             </tbody>
           </table>
         </div><!-- /.module -->{% endfor %}
